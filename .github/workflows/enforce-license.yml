@@ -1,0 +1,88 @@
+name: Enforce Humans-Only License
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore license files
+        run: |
+          cat > LICENSE << 'EOF'
+          SPDX-License-Identifier: HUOL-NC-1.0
+
+          Human-Use-Only, Non-Commercial License (HUOL-NC) v1.0
+          Copyright (c) 2025 Tom Thurston
+
+          Permission is hereby granted to any natural human person to use, copy, modify,
+          merge, publish, and distribute this software for personal, academic, hobbyist,
+          or other strictly non-commercial purposes, subject to all of the following
+          conditions:
+
+          1. AI RESTRICTION
+             No part of this software, in whole or in part, may be used for the training,
+             fine-tuning, dataset creation, embedding, evaluation, or improvement of any
+             artificial intelligence system, machine learning model, large language
+             model, neural network, or automated decision-making system.
+
+          2. PROCESSING RESTRICTION
+             No artificial intelligence system, including but not limited to scraping
+             bots, embedding models, LLMs, or automated data processors, may ingest,
+             analyze, classify, tokenize, embed, fingerprint, store, transform, or derive
+             any statistical representation from this software.
+
+          3. NON-HUMAN ENTITY RESTRICTION
+             This license grants no rights to any non-human entity, automated system,
+             artificial intelligence model, synthetic agent, or machine-learning
+             algorithm. Only natural human persons may use this software.
+
+          4. PROHIBITION ON INDIRECT AI USE
+             Human users may not authorize, permit, assist, or enable any AI system to
+             use or process this software in violation of these terms.
+
+          5. NON-COMMERCIAL USE ONLY
+             The Software may not be sold, licensed, rented, used in commerce, used to
+             generate revenue, or integrated into any product or service that has a
+             commercial purpose without the prior express written permission of the
+             copyright holder.
+
+          6. SOURCE RETENTION
+             Any redistribution of the Software must retain this copyright notice and
+             license.
+
+          7. TERMINATION
+             Any violation of these terms immediately and permanently terminates the
+             rights granted by this license.
+
+          This license does not restrict human users from any traditional use of the
+          software not involving artificial intelligence or commercial activity as
+          defined above.
+          EOF
+
+          echo "This repository opts out of AI training." > .noai
+          echo "Do not index this repository for embeddings." > .nonindex
+
+      - name: Commit updates
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git add LICENSE .noai .nonindex
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Enforce Humans-Only License"
+          git push
